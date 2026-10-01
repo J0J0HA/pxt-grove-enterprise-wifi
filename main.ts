@@ -725,6 +725,7 @@ namespace grove {
     }
 
     let isWifiConnected = false;
+    let wifiError = 0;
     /**
      * Setup Grove - Uart WiFi V2 to connect to  Wi-Fi
      */
@@ -751,6 +752,40 @@ namespace grove {
         result = waitAtResponse("OK", "ERROR", "None", 1000)
 
         sendAtCmd(`AT+CWJAP="${ssid}","${passwd}"`)
+        result = waitAtResponse("WIFI GOT IP", "ERROR", "None", 20000)
+
+        if (result == 1) {
+            isWifiConnected = true
+        }
+    }
+
+    /**
+     * Setup Grove - Uart WiFi V2 to connect to  Wi-Fi
+     */
+    //% block="Setup Enterprise Wifi|TX %txPin|RX %rxPin|Baud rate %baudrate|SSID = %ssid|Identity = %identity|Username = %username|Password = %passwd"
+    //% group="UartWiFi"
+    //% txPin.defl=SerialPin.C17
+    //% rxPin.defl=SerialPin.C16
+    //% baudRate.defl=BaudRate.BaudRate115200
+    export function setupEnterpriseWifi(txPin: SerialPin, rxPin: SerialPin, baudRate: BaudRate, ssid: string, identity: string, username: string, passwd: string) {
+        let result = 0
+
+        isWifiConnected = false
+
+        serial.redirect(
+            txPin,
+            rxPin,
+            baudRate
+        )
+
+        sendAtCmd("AT")
+        result = waitAtResponse("OK", "ERROR", "None", 1000)
+
+        sendAtCmd("AT+CWMODE=1")
+        result = waitAtResponse("OK", "ERROR", "None", 1000)
+
+        sendAtCmd(`AT+CWJEAP="${ssid}",1,"${identity}","${username}","${passwd}",1,,,,,0,0`)
+        // AT+CWJEAP=<"ssid">,<method>,<"identity">,<"username">,<"password">,<security>[,<jeap_timeout>][,<rssi>][,<"bssid">][,<channel>][,<scan_mode>][,<auth_mode>]
         result = waitAtResponse("WIFI GOT IP", "ERROR", "None", 20000)
 
         if (result == 1) {
